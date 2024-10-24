@@ -2,6 +2,7 @@ package com.minguard.controller;
 
 import com.minguard.dto.user.RegisterUserRequest;
 import com.minguard.dto.user.RegisterUserResponse;
+import com.minguard.dto.user.UpdateUserRequest;
 import com.minguard.dto.user.UserResponse;
 import com.minguard.service.spec.UserService;
 import com.minguard.util.Roles;
@@ -17,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -82,5 +85,22 @@ public class UserController {
 
         return ResponseEntity.ok(registeredUser);
     }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/{userId}")
+    @Operation(summary = "Edit user", description = "Updates user details by id. Must have admin role.")
+    public ResponseEntity<UserResponse> editUser(@PathVariable Long userId, @Valid @RequestBody UpdateUserRequest request) {
+        UserResponse updatedUser = userService.editUser(userId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/{userId}")
+    @Operation(summary = "Delete user", description = "Deletes a user by id. Must have admin role.")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+    
 
 }

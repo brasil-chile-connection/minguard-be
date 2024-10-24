@@ -1,7 +1,9 @@
 package com.minguard.service.impl;
 
+import com.minguard.dto.user.PasswordValidation;
 import com.minguard.dto.user.RegisterUserRequest;
 import com.minguard.dto.user.RegisterUserResponse;
+import com.minguard.dto.user.UpdateUserRequest;
 import com.minguard.dto.user.UserResponse;
 import com.minguard.entity.Gender;
 import com.minguard.entity.Role;
@@ -94,7 +96,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toRegisterResponse(userRepository.save(user));
     }
 
-    private void assertPasswordsMatch(RegisterUserRequest request) {
+    private void assertPasswordsMatch(PasswordValidation request) {
         if (!request.getPassword().equals(request.getPasswordConfirm())) {
             throw new IllegalArgumentException("Passwords do not match.");
         }
@@ -114,5 +116,32 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new RuntimeException("User not found");
         }
+    }
+
+    public UserResponse editUser(Long userId, UpdateUserRequest request) {
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserMapper.INSTANCE.updateUserPartial(user,request);
+
+        if (request.getPassword() != null && request.getPasswordConfirm() != null) {
+            assertPasswordsMatch(request);
+            assignPassword(user, request.getPassword());
+        }
+
+        if (request.getGenderId() != null) {
+            assignGender(user, request.getGenderId());
+        }
+
+        return UserMapper.INSTANCE.toResponse(userRepository.save(user));
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+
+        userRepository.deleteById(userId);
     }
 }
